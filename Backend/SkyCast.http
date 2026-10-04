@@ -1,0 +1,6 @@
+@SkyCast_HostAddress = http://localhost:5275
+
+GET {{SkyCast_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
