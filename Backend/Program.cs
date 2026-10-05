@@ -12,6 +12,9 @@ using SkyCast.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<EmailService>();
@@ -95,6 +98,15 @@ builder.Services.AddControllers();
 var app = builder.Build();
 
 
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        db.Database.Migrate();
+    }
+}
+
 
 using (var scope = app.Services.CreateScope())
 {
@@ -120,6 +132,10 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseHttpsRedirection();
 
