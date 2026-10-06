@@ -39,6 +39,12 @@ export default function UsersManagement() {
           throw new Error("Failed to fetch all users");
         }
 
+        if (response.status === 401 || response.status === 403) {
+          localStorage.clear();
+          window.location.href = "/login";
+          return;
+        }
+
         const data = await response.json();
         console.log("Users: ", data);
         setUsers(data);

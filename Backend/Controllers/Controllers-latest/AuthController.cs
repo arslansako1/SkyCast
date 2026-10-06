@@ -13,7 +13,7 @@ public class AuthController(TokenService _tokenService, UserManager<ApplicationU
 {
 
     [HttpPost("signup")]
-    public async Task<ActionResult> SignupAsync( SignupRequest request)
+    public async Task<ActionResult> SignupAsync(SignupRequest request)
     {
         if (await _userManager.FindByEmailAsync(request.Email!) is not null)
         {
@@ -34,22 +34,31 @@ public class AuthController(TokenService _tokenService, UserManager<ApplicationU
             return BadRequest(result.Errors.Select(e => e.Description));
         }
 
-        await _userManager.AddToRoleAsync(user, Roles.User);
+        var roleResult = await _userManager.AddToRoleAsync(user, Roles.User);
+        if (!roleResult.Succeeded)
+        {
+            return BadRequest(new
+            {
+                message = "User created but role assignment failed",
+                errors = roleResult.Errors.Select(e => e.Description)
+            });
+        }
 
-        return Ok(new { 
+        return Ok(new
+        {
             message = $"User '{request.Email}' signed up successfully",
             email = request.Email,
             role = "User"
         });
     }
 
-       [HttpPost("signupAdmin")]
+    [HttpPost("signupAdmin")]
     public async Task<ActionResult> AdminSignupAsync(SignupRequest request)
     {
         if (await _userManager.FindByEmailAsync(request.Email!) is not null)
         {
             return BadRequest("Email is already taken");
-            
+
         }
 
         var secretKey = _configration["AdminSettings:SecretKey"];
@@ -69,7 +78,7 @@ public class AuthController(TokenService _tokenService, UserManager<ApplicationU
             FirstName = request.FirstName!,
             LastName = request.LastName!,
             Email = request.Email,
-            UserName = request.Email         
+            UserName = request.Email
         };
 
         var result = await _userManager.CreateAsync(user, request.Password!);
@@ -78,9 +87,18 @@ public class AuthController(TokenService _tokenService, UserManager<ApplicationU
             return BadRequest(result.Errors.Select(e => e.Description));
         }
 
-        await _userManager.AddToRoleAsync(user, Roles.Admin);
+        var roleResult = await _userManager.AddToRoleAsync(user, Roles.Admin);
+        if (!roleResult.Succeeded)
+        {
+            return BadRequest(new
+            {
+                message = "User created but role assignment failed",
+                errors = roleResult.Errors.Select(e => e.Description)
+            });
+        }
 
-         return Ok(new { 
+        return Ok(new
+        {
             message = $"User '{request.Email}' signed up successfully",
             email = request.Email,
             role = "Admin"
@@ -88,7 +106,7 @@ public class AuthController(TokenService _tokenService, UserManager<ApplicationU
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult> LoginAsync( LoginRequest request)
+    public async Task<ActionResult> LoginAsync(LoginRequest request)
     {
         var user = await _userManager.FindByEmailAsync(request.Email);
 
@@ -100,7 +118,7 @@ public class AuthController(TokenService _tokenService, UserManager<ApplicationU
         var roles = await _userManager.GetRolesAsync(user);
         Console.WriteLine($" User roles: {string.Join(", ", roles)}");
 
-        var (token, expiresAt) =  _tokenService.CreateToken(user, roles);
+        var (token, expiresAt) = _tokenService.CreateToken(user, roles);
 
         var refreshToken = _tokenService.CreateRefreshToken();
 
@@ -117,17 +135,18 @@ public class AuthController(TokenService _tokenService, UserManager<ApplicationU
 
 
         return Ok(new AuthResponse(token, refreshToken, expiresAt, user.Id, user.Email!, user.FirstName, user.LastName, roles.ToList()));
-        
+
     }
 
     [HttpPost("forgetPassword")]
-    public async Task<ActionResult>  ForgetPassword(ForgetPasswordRequest request)
+    public async Task<ActionResult> ForgetPassword(ForgetPasswordRequest request)
     {
         var user = await _userManager.FindByEmailAsync(request.Email);
         if (user == null)
         {
-            return Ok(new {message = "If your email exists, you'll receive a reset link."});    
-        };
+            return Ok(new { message = "If your email exists, you'll receive a reset link." });
+        }
+        ;
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
@@ -136,7 +155,7 @@ public class AuthController(TokenService _tokenService, UserManager<ApplicationU
 
         var resetLink = $"http://localhost:5173/resetPassword?token={encodedToken}&email={encodedEmail}";
 
-  
+
         var emailBody = $@"
             <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>
                 <h1 style='color: #1a1a2e;'>🔐 Reset Your Password</h1>
@@ -156,8 +175,8 @@ public class AuthController(TokenService _tokenService, UserManager<ApplicationU
 
         await _emailService.SendEmailAsync(request.Email, "Reset your skyCast password", emailBody);
 
-        return Ok(new {message = "Reset link sent to your password"});
-        
+        return Ok(new { message = "Reset link sent to your password" });
+
     }
 
 
@@ -173,17 +192,17 @@ public class AuthController(TokenService _tokenService, UserManager<ApplicationU
         var decodedToken = request.Token;
         var decodedEmail = request.Email;
 
-           if (!string.IsNullOrEmpty(request.Token))
-    {
-        try
+        if (!string.IsNullOrEmpty(request.Token))
         {
-            decodedToken = Uri.UnescapeDataString(request.Token);
+            try
+            {
+                decodedToken = Uri.UnescapeDataString(request.Token);
+            }
+            catch
+            {
+                decodedToken = WebUtility.UrlDecode(request.Token);
+            }
         }
-        catch
-        {
-            decodedToken = WebUtility.UrlDecode(request.Token);
-        }
-    }
 
         Console.WriteLine($"Decoded Email: {decodedEmail}");
         Console.WriteLine($"Decoded Token length: {decodedToken?.Length ?? 0}");
@@ -194,7 +213,8 @@ public class AuthController(TokenService _tokenService, UserManager<ApplicationU
         {
             Console.WriteLine("User not found");
             return BadRequest(new { message = "Invalid request." });
-        };
+        }
+        ;
         Console.WriteLine($"User found {user.Email}");
 
         Console.WriteLine("Reseting password...");
@@ -209,11 +229,11 @@ public class AuthController(TokenService _tokenService, UserManager<ApplicationU
                 errors = result.Errors.Select(e => e.Description).ToList()
             });
         }
-        
-        Console.WriteLine("Password reseted successfully");
-        return Ok(new {message = "Password reset successfully"});
 
-        
+        Console.WriteLine("Password reseted successfully");
+        return Ok(new { message = "Password reset successfully" });
+
+
     }
 
     [HttpPost("refreshToken")]
@@ -240,13 +260,14 @@ public class AuthController(TokenService _tokenService, UserManager<ApplicationU
 
         var roles = await _userManager.GetRolesAsync(user);
 
-        var (newAcessToken, expiresAt) =  _tokenService.CreateToken(user, roles);
+        var (newAcessToken, expiresAt) = _tokenService.CreateToken(user, roles);
 
         var newRefreshToken = _tokenService.CreateRefreshToken();
 
         _context.RefreshTokens.Remove(refreshToken);
 
-        var refreshTokenEntity = new RefreshToken{
+        var refreshTokenEntity = new RefreshToken
+        {
 
             Token = newRefreshToken,
             UserId = user.Id,
@@ -255,7 +276,7 @@ public class AuthController(TokenService _tokenService, UserManager<ApplicationU
         };
 
         await _context.RefreshTokens.AddAsync(refreshTokenEntity);
-    
+
 
         await _context.SaveChangesAsync();
 

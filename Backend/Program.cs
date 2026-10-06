@@ -12,8 +12,11 @@ using SkyCast.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+if (!builder.Environment.IsDevelopment())
+{
+    var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
 
 builder.Services.AddOpenApi();
 
@@ -62,6 +65,8 @@ builder.Services.AddAuthentication(options =>
 {
     var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
 
+    options.MapInboundClaims = false; 
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -72,7 +77,7 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings?.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings!.Key)),
         ClockSkew = TimeSpan.Zero,
-        RoleClaimType = "role",
+        RoleClaimType = ClaimTypes.Role,
 
         NameClaimType = ClaimTypes.NameIdentifier   
     };
@@ -107,21 +112,31 @@ if (!app.Environment.IsEnvironment("Testing"))
     }
 }
 
-
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    
-  
-    if (!await roleManager.RoleExistsAsync(Roles.User))
-    {
-        await roleManager.CreateAsync(new IdentityRole(Roles.User));
-    }
-    
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
 
-    if (!await roleManager.RoleExistsAsync(Roles.Admin))
+    foreach (var roleName in new[] { Roles.User, Roles.Admin })
     {
-        await roleManager.CreateAsync(new IdentityRole(Roles.Admin));
+        if (await roleManager.RoleExistsAsync(roleName))
+        {
+            logger.LogInformation("Role '{Role}' already exists.", roleName);
+            continue;
+        }
+
+        var result = await roleManager.CreateAsync(new IdentityRole(roleName));
+
+        if (result.Succeeded)
+        {
+            logger.LogInformation("Role '{Role}' created.", roleName);
+        }
+        else
+        {
+            logger.LogError("Failed to create role '{Role}': {Errors}",
+                roleName,
+                string.Join(", ", result.Errors.Select(e => e.Description)));
+        }
     }
 }
 

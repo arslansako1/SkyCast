@@ -51,6 +51,13 @@ export default function Login(){
             roles: data.roles
         }));
 
+        console.log(JSON.stringify({
+            UserId: data.userId,
+            email: data.email,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            roles: data.roles}));
+
             window.location.href = "/dashboard";
 
 

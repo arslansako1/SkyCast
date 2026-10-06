@@ -16,6 +16,7 @@ public class TokenService(IOptions<JwtSettings> jwtSettings)
         var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
+            new Claim(ClaimTypes.NameIdentifier, user.Id), 
             new Claim(JwtRegisteredClaimNames.Email, user.Email!),
             new Claim(JwtRegisteredClaimNames.Name, $"{user.FirstName} {user.LastName}"),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
@@ -23,7 +24,7 @@ public class TokenService(IOptions<JwtSettings> jwtSettings)
 
         foreach (var role in roles)
         {
-            claims.Add(new Claim("role", role));
+            claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_settings.Key));

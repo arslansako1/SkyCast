@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 [ApiController]
 [Route("api/admin")]
+[Authorize(Roles = "Admin")] 
 public class AdminController(UserManager<ApplicationUser> _userManager) : ControllerBase
 {
 
