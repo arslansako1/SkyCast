@@ -195,29 +195,6 @@ Sign up as a user, or sign up as admin to manage accounts.
 
 ---
 
-## Running With Docker Compose (Full Stack)
-
-```bash
-docker-compose up --build
-```
-
-Then open `http://localhost:3000`.
-
-To stop:
-
-```bash
-docker-compose down
-```
-
-To reset the database:
-
-```bash
-docker-compose down -v
-docker-compose up -d --build
-```
-
----
-
 ## API Endpoints
 
 ### Weather
