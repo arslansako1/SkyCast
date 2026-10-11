@@ -1,6 +1,6 @@
 # SkyCast — Weather App
 
-🚀 **Live Demo:** https://skycast-virid.vercel.app.vercel.app
+🚀 **Live Demo:** https://skycast-virid.vercel.app
 
 A full-stack weather application that provides current conditions, multi-day forecasts, saved favorite cities, and an intelligent Trip Planner for any destination worldwide. Built with ASP.NET Core and React, with in-memory caching and per-IP rate limiting to protect the external weather API.
 
