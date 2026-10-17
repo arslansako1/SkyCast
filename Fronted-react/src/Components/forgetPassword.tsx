@@ -14,7 +14,7 @@ export default function ForgetPassword(){
     console.log("ForgetPassword component rendered");
 
 
-    const handleSubmit = async e => {
+    const handleSubmit = async (e: React.SubmitEvent<HTMLElement>) => {
         console.log("handleSubmit triggerd");
         e.preventDefault();
 
@@ -50,7 +50,7 @@ export default function ForgetPassword(){
 
         } catch(error){
             console.error("Forget password error: ", error);
-            setError(error.message || "Something went wrong, please try again");
+            setError(error instanceof Error ? error.message : "Something went wrong, please try again");
 
         } finally{
             setLoading(false);

@@ -6,8 +6,8 @@ export const API_ENDPOINTS = {
     login: `${API_URL}/api/auth/login`,
     signup: `${API_URL}/api/auth/signup`,
     adminSignup: `${API_URL}/api/auth/signupAdmin`,
-    weather: (cityName) => `${API_URL}/api/weather/getCurrentWeather?city=${cityName}`,
-    forcast: (city, days = 5) => `${API_URL}/api/weather/GetForecast?city=${city}&days=${days}`,
+    weather: (cityName: string) => `${API_URL}/api/weather/getCurrentWeather?city=${cityName}`,
+    forcast: (city: string, days: number = 5) => `${API_URL}/api/weather/GetForecast?city=${city}&days=${days}`,
     getMe: `${API_URL}/api/users/getMe`,
     updateMe: `${API_URL}/api/users/updateMe`,
     getAllUsers: `${API_URL}/api/admin/getAllUsers`,
@@ -18,7 +18,7 @@ export const API_ENDPOINTS = {
     resetPassword: `${API_URL}/api/auth/resetPassword`,
     addFavorite: `${API_URL}/api/favorites/addFavorites`,
     getFavorite: `${API_URL}/api/favorites/getFavorites`,
-    deleteFavorite: (cityName) => `${API_URL}/api/favorites/deleteFavorite?cityName=${cityName}`,
-    getCountries: (query) => `https://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=5&appid=${WEATHER_API_KEY}`
+    deleteFavorite: (cityName: string) => `${API_URL}/api/favorites/deleteFavorite?cityName=${cityName}`,
+    getCountries: (query: string) => `https://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=5&appid=${WEATHER_API_KEY}`
 };
 

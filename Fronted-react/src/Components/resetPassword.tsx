@@ -35,7 +35,7 @@ export default function ResetPassword(){
 
     }, [location])
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.SubmitEvent<HTMLElement>) => {
         console.log("handleSubmit loaded");
         e.preventDefault();
         setLoading(true);
@@ -76,7 +76,7 @@ export default function ResetPassword(){
             if (!response.ok){
                 console.log("Reset failed");
                 setError("Reset failed");
-                throw new Error("Status: ", response.status);
+                throw new Error(`Status ": ${response.status}`);
             };
 
             const data = await response.json();
@@ -90,7 +90,7 @@ export default function ResetPassword(){
 
         } catch(error){
             console.error("Reset password failed: ", error);
-            setError(error.message || "Something went wrong, please try again");
+            setError(error instanceof Error ? error.message : "Something went wrong, please try again");
 
         } finally{
             setLoading(false);

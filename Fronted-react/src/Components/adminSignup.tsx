@@ -1,20 +1,20 @@
 import { useState } from "react";
 import { Link } from 'react-router-dom'
-import "./style.css";
 import { API_ENDPOINTS } from "../Config/Urls";
+import "./style.css";
 
-
-export default function Signup(){
+export default function AdminSignup(){
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [adminKey, setAdminKey] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
 
-    const handleSubmit = async e => {
+    const handleSubmit = async (e: React.SubmitEvent<HTMLElement>) => {
         e.preventDefault();
 
         setError("");
@@ -34,12 +34,13 @@ export default function Signup(){
                 LastName: lastName,
                 Email: email,
                 Password: password,
-                ConfirmPassword: confirmPassword
+                ConfirmPassword: confirmPassword,
+                AdminSecretKey: adminKey
             };
 
-            console.log("User data is created");
+            console.log("Admin ser data is created");
 
-            const response = await fetch(API_ENDPOINTS.signup,{
+            const response = await fetch(API_ENDPOINTS.adminSignup,{
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -56,8 +57,8 @@ export default function Signup(){
                 const textData = JSON.parse(text);
 
                 if(textData.errors){
-                const errorMessages = [];
-                for (const [field, message] of Object.entries(textData.errors)){
+                const errorMessages: string[] = [];
+                for (const [field, message] of Object.entries(textData.errors as Record<string, string[]>)){
                     errorMessages.push(`${field}: ${message.join(', ')}`);
                 }
                 setError(errorMessages.join('\n')); 
@@ -76,22 +77,22 @@ export default function Signup(){
                 }
 
 
+            };
 
-        };
-
-            const data = JSON.parse(text);
+            const data =  JSON.parse(text);
 
             setSuccess(true);
             console.log("Signup success");
+
             setTimeout(() => {
                 window.location.href = "/login";
             }, 2000);
 
         } catch(error){
-            console.error("Signup error", error);
+            console.error("Admin Signup error", error);
 
             if (!error){
-            setError("Signup failed");
+            setError("Admin signup failed");
             }
 
         } finally{
@@ -100,13 +101,13 @@ export default function Signup(){
     }
 
     return(
-        <div className = "signup-container">
-            <div className="signup-card">
+        <div className = "admin-signup-container">
+            <div className="admin-signup-card">
                 <h1>SkyCast</h1>
-                <h2>Signup</h2>
+                <h2>Admin signup</h2>
 
                 {error && (<div className="error-message">{error}</div>)}
-                {success && (<div className="success-message">Success! account created</div>)}
+                {success && (<div className="success-message">Success! admin account created</div>)}
                  
                  <form onSubmit={handleSubmit}>
 
@@ -130,7 +131,11 @@ export default function Signup(){
                         <input type="password" placeholder="Confirm passowrd" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}/>
                     </div>
 
-                    <button type="submit" className="signup-btn" disabled={loading || success}> {loading ? "Creating account" : "Signup"} </button>
+                    <div className="input">
+                        <input type="password" placeholder="AdminKey" value={adminKey} onChange={e => setAdminKey(e.target.value)}/>
+                    </div>
+
+                    <button type="submit" className="admin-signup-btn" disabled={loading || success}> {loading ? "Creating admin account" : "Signup as admin"} </button>
 
                  </form>
 
@@ -138,11 +143,10 @@ export default function Signup(){
                     Already have account? <Link to="/login">Login</Link>
                  </div>
 
-                 <div className="admin-link">
-                    Admin? <Link to="/adminSignup">Admin signup</Link>
+                 <div className="signup-link">
+                    Signup <Link to="/signup">signup</Link>
                  </div>
 
-                 <div className="login-link"></div>
                 <p className="mark">© 2026 SkyCast</p>
 
             </div>

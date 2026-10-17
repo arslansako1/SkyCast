@@ -19,7 +19,8 @@ export default function Profile(){
     console.log("Use states created");
     
     useEffect(() => {
-        const userData = JSON.parse(localStorage.getItem("user"));
+        const storedUserData = localStorage.getItem("user");
+        const userData = storedUserData ? JSON.parse(storedUserData) : null;
 
         if (userData){
         setFirstName(userData.firstName || "");
@@ -40,7 +41,7 @@ export default function Profile(){
 
     console.log("HandleSaveBtn about to run...");
 
-    const handleSaveBtn = async (e) => {
+    const handleSaveBtn = async(e: React.SubmitEvent<HTMLElement>) => {
         if (e) e.preventDefault();
 
         console.log("InHandleSaveBtn");
@@ -99,7 +100,8 @@ export default function Profile(){
             };
 
             const data = JSON.parse(text);
-            const user = JSON.parse(localStorage.getItem("user"))
+            const storedUser = localStorage.getItem("user");
+            const user = storedUser ? JSON.parse(storedUser) : null;
             user.firstName = data.firstName;
             user.lastName = data.lastName;
             user.email = data.email;
@@ -120,7 +122,7 @@ export default function Profile(){
 
         }catch(error){
         console.log("Response failed: ", error);
-        setError(error.message);
+        setError(error instanceof Error ? error.message : "error updating user");
     }  finally{
         setLoading(false);
     }

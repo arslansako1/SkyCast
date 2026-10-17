@@ -1,24 +1,42 @@
-import { useRef, useState } from "react";
+import { SyntheticEvent, useRef, useState } from "react";
 import { API_ENDPOINTS } from "../Config/Urls";
 import { Link } from "react-router-dom";
 
+interface City{
+  id?: number;
+  name: string;
+  country: string;
+  state?: string;
+
+};
+
+interface ForecastCity{
+    date: string;
+    temp: number;
+    description: string;
+    icon?: string;
+    windSpeed: number;
+    score: number;
+}
+
+
 export default function Planner() {
   const [searchInput, setSearchInput] = useState("");
-  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [searchSuggestions, setSearchSuggestions] = useState<City[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [city, setCity] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [isPlanned, setIsPlanned] = useState(false);
-  const [bestDay, setBestDay] = useState(null);
-  const [worstDay, setWorstDay] = useState(null);
+  const [bestDay, setBestDay] = useState<ForecastCity | null>(null);
+  const [worstDay, setWorstDay] = useState<ForecastCity | null>(null);
   const [cityName, setCityName] = useState(false);
   const [selectedTripType, setSelectedTripType] = useState(false);
   const [weatherMessage, setWeatherMessage] = useState("");
   const hasFetched = useRef(false);
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       weekday: "short",
       month: "short",
@@ -27,7 +45,7 @@ export default function Planner() {
     });
   };
 
-  const handleSearchInput = async (e) => {
+  const handleSearchInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchInput(value);
 
@@ -47,12 +65,12 @@ export default function Planner() {
     }
   };
 
-  const handlePlanTrip = async (e) => {
+  const handlePlanTrip = async (e: SyntheticEvent) => {
     e.preventDefault();
 
     const cityName = searchInput.trim();
-    const selectedTrip = document.querySelector(
-      "input[name='tripType']:checked",
+    const selectedTrip = document.querySelector<HTMLInputElement>(
+      "input[name='tripType']:checked"
     );
 
     setCityName(false);
@@ -66,8 +84,8 @@ export default function Planner() {
       setSelectedTripType(true);
       return;
     }
-
-    const tripType = selectedTrip.value;
+ 
+    const tripType: string = selectedTrip.value;
     setLoading(true);
     setError("");
 
@@ -75,13 +93,13 @@ export default function Planner() {
       const response = await fetch(API_ENDPOINTS.forcast(cityName), {});
       if (!response.ok) {
         console.log("Failed to fetch forecast");
-        setError("Status: ", response.status);
+        setError(`Status: ", ${response.status}`);
         throw new Error("Failed to fetch forecast");
       }
 
       const data = await response.json();
 
-      const scoredDays = data.forecast.map((day) => {
+      const scoredDays: ForecastCity[] = data.forecast.map((day: ForecastCity) => {
         let score = 0;
 
         if (tripType === "beach") {
@@ -147,13 +165,13 @@ export default function Planner() {
       console.log("Going into the foreach...");
     } catch (error) {
       console.error("Forecast error: ", error);
-      setError(error.message || "Forecast error");
+      setError(error instanceof Error ? error.message : "Forecast error");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLElement>) => {
     e.preventDefault();
 
     if (searchInput.trim()) {
@@ -165,7 +183,7 @@ export default function Planner() {
     }
   };
 
-  const handleProfileClick = (e) => {
+  const handleProfileClick = (e: React.MouseEvent<HTMLElement>) => {
     const token = localStorage.getItem("token");
     if (token) {
       e.preventDefault();
@@ -174,7 +192,7 @@ export default function Planner() {
     }
   };
 
-  const handleLogout = (e) => {
+  const handleLogout = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");

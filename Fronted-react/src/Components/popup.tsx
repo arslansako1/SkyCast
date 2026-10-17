@@ -1,11 +1,18 @@
 import { useEffect, useRef } from "react"
 
+interface PopupProps{
+    message: string;
+    onClose?: () => void;
+    onConfirm?: () => void;
+    onCancel?: () => void;
+    type: "alert" | "confirm";
+};
 
-export default function Popup({message, onClose, onConfirm, onCancel, type}){
-    const dialogRef = useRef(null);
+export default function Popup({message, onClose, onConfirm, onCancel, type}: PopupProps){
+    const dialogRef = useRef<HTMLDialogElement>(null);
 
     useEffect(() => {
-        dialogRef.current.showModal();
+        dialogRef.current?.showModal();
 
 
     }, [])

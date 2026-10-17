@@ -3,14 +3,23 @@ import { Link, useNavigate } from "react-router-dom";
 import { API_ENDPOINTS } from "../Config/Urls";
 import Popup from "./popup";
 
+
+interface User{
+  id: number;
+  firstName: string;
+  lastName: string;
+
+};
+
+
 export default function UsersManagement() {
   const navigate = useNavigate();
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [popupMessage, setIsPopupMessage] = useState("");
-  const [userId, setUserId] = useState(null);
+  const [userId, setUserId] = useState<number | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -21,7 +30,7 @@ export default function UsersManagement() {
       return;
     }
 
-    const fetchAllUsers = async (e) => {
+    const fetchAllUsers = async () => {
       setError("");
 
       console.log("Fetching:", API_ENDPOINTS.getAllUsers);
@@ -50,7 +59,7 @@ export default function UsersManagement() {
         setUsers(data);
       } catch (error) {
         console.log("Error fetching users: ", error);
-        setUsers(error.message);
+        setError(error instanceof Error ? error.message : "Error fetching users");
       } finally {
         setLoading(false);
       }
@@ -59,11 +68,11 @@ export default function UsersManagement() {
     fetchAllUsers();
   }, []);
 
-  const handleEditBtn = async (userId) => {
+  const handleEditBtn = async (userId: number) => {
     navigate(`/adminUserProfile/${userId}`);
   };
 
-  const handleDeleteBtn = async (userId) => {
+  const handleDeleteBtn = async (userId: number) => {
     setError("");
 
     const token = localStorage.getItem("token");
@@ -86,8 +95,8 @@ export default function UsersManagement() {
         throw new Error(text || "Failed to delete user");
       }
     } catch (error) {
-      console.error("Error deleting user: ", error.message);
-      alert("Failed to delete user: ", error.message);
+      console.error("Error deleting user: ", error instanceof Error ? error.message : "Error deleting user");
+      alert(error instanceof Error ? error.message : "Error deleting user");
     }
   };
 
@@ -156,7 +165,9 @@ export default function UsersManagement() {
         <Popup
           message={popupMessage}
           onConfirm={() => {
-            handleDeleteBtn(userId);
+            if (userId !== null){
+              handleDeleteBtn(userId);
+            }
             setIsConfirmOpen(false);
           }}
           onCancel={() => setIsConfirmOpen(false)}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Link } from 'react-router-dom'
 import "./style.css";
 import { API_ENDPOINTS } from "../Config/Urls";
@@ -9,7 +9,7 @@ export default function Login(){
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
-    const handleSubmit = async e => {
+    const handleSubmit = async (e: React.SubmitEvent<HTMLElement>) => {
         e.preventDefault()
 
         setError("");

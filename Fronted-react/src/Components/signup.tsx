@@ -1,20 +1,20 @@
-import { useState } from "react";
+import { ReactPromise, useState } from "react";
 import { Link } from 'react-router-dom'
-import { API_ENDPOINTS } from "../Config/Urls";
 import "./style.css";
+import { API_ENDPOINTS } from "../Config/Urls";
 
-export default function AdminSignup(){
+
+export default function Signup(){
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [adminKey, setAdminKey] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
 
-    const handleSubmit = async e => {
+    const handleSubmit = async (e: React.SubmitEvent<HTMLElement>) => {
         e.preventDefault();
 
         setError("");
@@ -34,13 +34,12 @@ export default function AdminSignup(){
                 LastName: lastName,
                 Email: email,
                 Password: password,
-                ConfirmPassword: confirmPassword,
-                AdminSecretKey: adminKey
+                ConfirmPassword: confirmPassword
             };
 
-            console.log("Admin ser data is created");
+            console.log("User data is created");
 
-            const response = await fetch(API_ENDPOINTS.adminSignup,{
+            const response = await fetch(API_ENDPOINTS.signup,{
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -58,7 +57,7 @@ export default function AdminSignup(){
 
                 if(textData.errors){
                 const errorMessages = [];
-                for (const [field, message] of Object.entries(textData.errors)){
+                for (const [field, message] of Object.entries(textData.errors as Record<string, string[]>)){
                     errorMessages.push(`${field}: ${message.join(', ')}`);
                 }
                 setError(errorMessages.join('\n')); 
@@ -77,22 +76,22 @@ export default function AdminSignup(){
                 }
 
 
-            };
 
-            const data =  JSON.parse(text);
+        };
+
+            const data = JSON.parse(text);
 
             setSuccess(true);
             console.log("Signup success");
-
             setTimeout(() => {
                 window.location.href = "/login";
             }, 2000);
 
         } catch(error){
-            console.error("Admin Signup error", error);
+            console.error("Signup error", error);
 
             if (!error){
-            setError("Admin signup failed");
+            setError("Signup failed");
             }
 
         } finally{
@@ -101,13 +100,13 @@ export default function AdminSignup(){
     }
 
     return(
-        <div className = "admin-signup-container">
-            <div className="admin-signup-card">
+        <div className = "signup-container">
+            <div className="signup-card">
                 <h1>SkyCast</h1>
-                <h2>Admin signup</h2>
+                <h2>Signup</h2>
 
                 {error && (<div className="error-message">{error}</div>)}
-                {success && (<div className="success-message">Success! admin account created</div>)}
+                {success && (<div className="success-message">Success! account created</div>)}
                  
                  <form onSubmit={handleSubmit}>
 
@@ -131,11 +130,7 @@ export default function AdminSignup(){
                         <input type="password" placeholder="Confirm passowrd" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}/>
                     </div>
 
-                    <div className="input">
-                        <input type="password" placeholder="AdminKey" value={adminKey} onChange={e => setAdminKey(e.target.value)}/>
-                    </div>
-
-                    <button type="submit" className="admin-signup-btn" disabled={loading || success}> {loading ? "Creating admin account" : "Signup as admin"} </button>
+                    <button type="submit" className="signup-btn" disabled={loading || success}> {loading ? "Creating account" : "Signup"} </button>
 
                  </form>
 
@@ -143,10 +138,11 @@ export default function AdminSignup(){
                     Already have account? <Link to="/login">Login</Link>
                  </div>
 
-                 <div className="signup-link">
-                    Signup <Link to="/signup">signup</Link>
+                 <div className="admin-link">
+                    Admin? <Link to="/adminSignup">Admin signup</Link>
                  </div>
 
+                 <div className="login-link"></div>
                 <p className="mark">© 2026 SkyCast</p>
 
             </div>

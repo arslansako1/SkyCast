@@ -1,25 +1,72 @@
-import { useEffect, useRef, useState } from "react";
+import { SyntheticEvent, ChangeEvent, MouseEvent, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import "./style.css";
 import { API_ENDPOINTS } from "../Config/Urls";
 import Popup from "./popup";
 import DangerAlert from "./dangerAlert";
 
+interface User {
+    userId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    roles: string[];
+}
+
+interface Weather {
+    city: string;
+    temp: number;
+    feelsLike: number;
+    description: string;
+    icon: string;
+    timezone?: number;
+}
+
+interface ForecastDay {
+    date: string;
+    temp: number;
+    feelsLike: number;
+    description: string;
+    icon: string;
+    windSpeed: number;
+}
+
+interface ForecastHour {
+    time: string;
+    temp: number;
+    feelsLike: number;
+    description: string;
+    icon: string;
+}
+
+interface ForecastData {
+    forecast: ForecastDay[];
+    hourly: ForecastHour[];
+}
+
+interface City {
+    id?: number;
+    name: string;
+    country: string;
+    state?: string;
+}
+
+
 export default function Dashboard() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [time, setTime] = useState(new Date());
-  const [weather, setWeather] = useState(null);
-  const [error, setError] = useState(null);
+  const [weather, setWeather] = useState<Weather | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
   const [city, setCity] = useState("Loading location");
   const [searchInput, setSearchInput] = useState("");
   const [unit, setUnit] = useState("C");
-  const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [selectedFavorite, setSelectedFavorite] = useState("");
   const [cityTime, setCityTime] = useState(new Date());
   const [viewMode, setViewMode] = useState("today");
-  const [forecastData, setForecastData] = useState(null);
+  const [forecastData, setForecastData] = useState<ForecastData | null>(null);
   const [loadingForecast, setLoadingForecast] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -28,7 +75,7 @@ export default function Dashboard() {
   const [isDangerOpen, setIsDangerOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [searchSuggestions, setSearchSuggestions] = useState<City[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const hasFetched = useRef(false);
 
@@ -57,11 +104,11 @@ export default function Dashboard() {
 
         const data = await response.json();
 
-        const cityNames = data.map((fc) => fc.cityName);
+        const cityNames = data.map((fc: {cityName: string}) => fc.cityName);
         setFavorites(cityNames);
       } catch (error) {
         console.error("Failed to fetch favorite cities", error);
-        setError(error.message);
+        setError(error instanceof Error ? error.message : "Something went wrong, please try again");
         return;
       } finally {
         setLoading(false);
@@ -74,7 +121,8 @@ export default function Dashboard() {
     const token = localStorage.getItem("token");
 
     if (token) {
-      const userData = JSON.parse(localStorage.getItem("user"));
+      const storedUserData = localStorage.getItem("user");
+      const userData = storedUserData ? JSON.parse(storedUserData) : null;
       setUser(userData);
     } else {
       setUser(null);
@@ -125,7 +173,7 @@ export default function Dashboard() {
     }
   }, []);
 
-  const getCityFromCoords = async (latitude, longitude) => {
+  const getCityFromCoords = async (latitude: number, longitude: number) => {
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=10`,
@@ -153,13 +201,13 @@ export default function Dashboard() {
     }
   };
 
-  const fetchWeather = async (cityName) => {
+  const fetchWeather = async (cityName: string) => {
     setLoading(true);
     setError(null);
 
     const token = localStorage.getItem("token");
 
-    const headers = {};
+    const headers: Record<string, string> = {};
     if (token) {
       headers.authorization = "Bearer " + token;
     }
@@ -186,14 +234,14 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error("Weather error", error);
-      setError(error.message);
+      setError(error instanceof Error ? error.message : "Error fetching error");
     } finally {
       setLoading(false);
       setSearchLoading(false);
     }
   };
 
-  const fetchForecast = async (cityName) => {
+  const fetchForecast = async (cityName: string) => {
     setLoadingForecast(true);
     setError("");
 
@@ -201,7 +249,7 @@ export default function Dashboard() {
       const response = await fetch(API_ENDPOINTS.forcast(cityName), {});
       if (!response.ok) {
         console.log("Failed to fetch forecast");
-        setError("Status: ", response.status);
+        setError(`Status: ${response.status}`);
         throw new Error("Failed to fetch forecast");
       }
 
@@ -209,7 +257,7 @@ export default function Dashboard() {
  
       setForecastData(data);
 
-       data.forecast.forEach((day, index) => {
+       data.forecast.forEach((day: ForecastDay, index: number) => {
     console.log(`📅 Day ${index + 1}:`, {
       date: day.date,
       description: day.description,
@@ -221,9 +269,9 @@ export default function Dashboard() {
       console.log("Going into the foreach...");
 
       if (data){
-        data.forecast.forEach(day => {
+        data.forecast.forEach((day: ForecastDay) => {
 
-          const formatDate = (dateString) => {
+          const formatDate = (dateString: string) => {
             return new Date(dateString).toLocaleDateString("en-US", {
               weekday: "short",   
               month: "short",    
@@ -232,15 +280,15 @@ export default function Dashboard() {
             });
           }
 
-          const hottestDay = data.forecast.reduce((max, day) => 
+          const hottestDay = data.forecast.reduce((max: ForecastDay, day: ForecastDay) => 
             day.temp > max.temp ? day : max
           );
 
-          const coldestDay = data.forecast.reduce((max, day) =>
+          const coldestDay = data.forecast.reduce((max: ForecastDay, day: ForecastDay) =>
             day.temp < max.temp ? day : max
           );
 
-          const strongestWind = data.forecast.reduce((max, day) =>
+          const strongestWind = data.forecast.reduce((max: ForecastDay, day: ForecastDay) =>
             day.windSpeed > max.windSpeed ? day : max
           )  
 
@@ -267,6 +315,7 @@ export default function Dashboard() {
 
           if (day.description?.includes("thunderstorm")){
             console.log("An alert must show up");
+            const formattedDate = formatDate(coldestDay.date);
             setDangerMessage(`Storm in ${cityName} warning in ${formattedDate}`);
             setIsDangerOpen(true);
           }
@@ -276,14 +325,14 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error("Forecast error: ", error);
-      setError(error.message || "Forecast error");
+      setError(error instanceof Error ? error.message : "Error fetching forecast");
     } finally {
       setLoadingForecast(false);
     }
   };
 
-  const getWeatherIcon = (iconCode) => {
-    const icons = {
+  const getWeatherIcon = (iconCode: string) => {
+    const icons: Record<string, string> = {
       "01d": "☀️",
       "01n": "🌙",
       "02d": "⛅",
@@ -310,8 +359,8 @@ export default function Dashboard() {
     setUnit(unit === "C" ? "F" : "C");
   };
 
-  const convertTemp = (celsius) => {
-    if (celsius === undefined || celsius === null) return null;
+  const convertTemp = (celsius: number | undefined | null): number => {
+    if (celsius === undefined || celsius === null) return 0;
     if (unit === "F") {
       return (celsius * 9) / 5 + 32;
     }
@@ -322,7 +371,7 @@ export default function Dashboard() {
     return unit === "F" ? "F" : "C";
   };
 
-const handleSearchInput = async (e) => {
+const handleSearchInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
   const value = e.target.value;
   setSearchInput(value);
 
@@ -342,7 +391,7 @@ const handleSearchInput = async (e) => {
   }
 };
 
-const handleSearch = (e) => {
+const handleSearch = (e: SyntheticEvent) => {
   e.preventDefault();
 
   if (searchInput.trim()) {
@@ -355,7 +404,7 @@ const handleSearch = (e) => {
 };
 
 
-  const handleLogout = (e) => {
+  const handleLogout = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     localStorage.removeItem("token");
     localStorage.removeItem("refreshToken");
@@ -363,7 +412,7 @@ const handleSearch = (e) => {
     window.location.href = "/login";
   };
 
-  const handleProfileClick = (e) => {
+  const handleProfileClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const token = localStorage.getItem("token");
     if (token) {
       e.preventDefault();
@@ -375,12 +424,12 @@ const handleSearch = (e) => {
     setIsAlertOpen(true);
   };
 
-  const handleAdminManagBtn = (e) => {
+  const handleAdminManagBtn = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     window.location.href = "/usersManagement";
   };
 
-  const addFavorite = async (e) => {
+  const addFavorite = async (e: MouseEvent<HTMLButtonElement>) => {
     console.log(API_ENDPOINTS.addFavorite);
     console.log("addFavorite loaded");
 
@@ -436,7 +485,7 @@ const handleSearch = (e) => {
     }
   };
 
-  const removeFavorite = async (cityToRemove) => {
+  const removeFavorite = async (cityToRemove: string) => {
     setError("");
 
     const token = localStorage.getItem("token");
@@ -469,7 +518,7 @@ const handleSearch = (e) => {
       }
     } catch (error) {
       console.error("Failed to remove city from favorites", error);
-      setError(error.message || "Failed to remove city from favorites");
+      setError(error instanceof Error ? error.message : "Failed to remove city from favorites");
       return;
     }
   };
@@ -483,7 +532,7 @@ const handleSearch = (e) => {
   };
 
   
-  const handlePlannerClick = (e) => {
+  const handlePlannerClick = (e: MouseEvent<HTMLButtonElement>) => {
     const token = localStorage.getItem("token");
     if (token) {
       e.preventDefault();
@@ -496,6 +545,7 @@ const handleSearch = (e) => {
   };
 
   const isAdmin = user?.roles?.includes("Admin");
+
 
   return (
     <>
@@ -564,6 +614,7 @@ const handleSearch = (e) => {
       ))}
     </ul>
   )}
+  
 </div>
 
           <button type="submit">

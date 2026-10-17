@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { API_ENDPOINTS } from "../Config/Urls";
 
@@ -71,11 +71,15 @@ export default function AdminUserProfile() {
           setOriginalRole("User");
         }
 
-
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching user: ", error.message);
-        setError(error.message);
+        console.error(
+          "Error fetching user: ",
+          error instanceof Error ? error.message : "Uknown error occured",
+        );
+        setError(
+          error instanceof Error ? error.message : "Uknown error occured",
+        );
         setLoading(false);
       }
     };
@@ -83,87 +87,86 @@ export default function AdminUserProfile() {
     fetchUser();
   }, [userId]);
 
-const handleSaveBtn = async (e) => {
-  if (e) e.preventDefault();
+  const handleSaveBtn = async (e: React.SubmitEvent<HTMLElement>) => {
+    if (e) e.preventDefault();
 
-  console.log("InHandleSaveBtn");
+    console.log("InHandleSaveBtn");
 
-  setError("");
-  setSaving(true);
+    setError("");
+    setSaving(true);
 
     const firstNameChange = firstName !== originalFirstName;
-    const lastNameChange =  lastName !== originalLastName;
+    const lastNameChange = lastName !== originalLastName;
     const emailChange = email !== originalEmail;
     const roleChange = role !== originalRole;
 
-    if (!firstNameChange && !lastNameChange && !emailChange && !roleChange){
-        console.log("No changes detected");
-         setError("No changes to save");
-          setNoChanges(true);
-          return;
-        }
-
-
-  const token = localStorage.getItem("token");
-  if (!token) {
-    setError("You must be logged in");
-    setSaving(false);
-    return;
-  }
-
-  console.log("Creating userData..");
-
-  try {
-    const userData = {
-      FirstName: firstName,
-      LastName: lastName,
-      Email: email,
-      Role: role 
-    };
-    
-    console.log("User data created: ", userData);
-
-    const response = await fetch(`${API_ENDPOINTS.updateUser}/${userId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
-      },
-      body: JSON.stringify(userData),
-    });
-
-    const text = await response.text();
-
-    if (!response.ok) {
-      console.log("Response failed with status:", response.status);
-      setError(`Update failed: ${text}`);
-      throw new Error(text || "Response failed");
+    if (!firstNameChange && !lastNameChange && !emailChange && !roleChange) {
+      console.log("No changes detected");
+      setError("No changes to save");
+      setNoChanges(true);
+      return;
     }
 
-    const data = JSON.parse(text);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("You must be logged in");
+      setSaving(false);
+      return;
+    }
 
-    console.log("Response data:", data);
-    console.log("New FirstName:", data.firstName);
-    console.log("New LastName:", data.lastName);
-    console.log("New Email:", data.email);
-    
-    const newRole = data.roles ? data.roles[0] : "No role";
-    console.log("New Role:", newRole);
+    console.log("Creating userData..");
 
-    console.log("User updated successfully");
-    setNoChanges(false);
-    setSaved(true);
+    try {
+      const userData = {
+        FirstName: firstName,
+        LastName: lastName,
+        Email: email,
+        Role: role,
+      };
 
-    setTimeout(() => {
-      navigate("/usersManagement");
-    }, 2000);
-  } catch (error) {
-    console.log("Response failed: ", error);
-    setError(error.message);
-  } finally {
-    setSaving(false);
-  }
-};
+      console.log("User data created: ", userData);
+
+      const response = await fetch(`${API_ENDPOINTS.updateUser}/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const text = await response.text();
+
+      if (!response.ok) {
+        console.log("Response failed with status:", response.status);
+        setError(`Update failed: ${text}`);
+        throw new Error(text || "Response failed");
+      }
+
+      const data = JSON.parse(text);
+
+      console.log("Response data:", data);
+      console.log("New FirstName:", data.firstName);
+      console.log("New LastName:", data.lastName);
+      console.log("New Email:", data.email);
+
+      const newRole = data.roles ? data.roles[0] : "No role";
+      console.log("New Role:", newRole);
+
+      console.log("User updated successfully");
+      setNoChanges(false);
+      setSaved(true);
+
+      setTimeout(() => {
+        navigate("/usersManagement");
+      }, 2000);
+    } catch (error) {
+      console.log("Response failed: ", error);
+      setError(error instanceof Error ? error.message : "Response failed");
+    } finally {
+      setSaving(false);
+    }
+  };
   if (loading) {
     return (
       <div className="dashboard-container">
@@ -177,7 +180,6 @@ const handleSaveBtn = async (e) => {
   return (
     <div className="dashboard-container">
       <div className="profile-section">
-
         <form onSubmit={handleSaveBtn}>
           <label>FirstName:</label>
           <input
@@ -207,16 +209,15 @@ const handleSaveBtn = async (e) => {
           </select>
 
           <button type="submit">Save</button>
-           {saved && <span>Profile updated successfully</span>}
-           {noChanges && <span>No changes detected</span>}
+          {saved && <span>Profile updated successfully</span>}
+          {noChanges && <span>No changes detected</span>}
         </form>
 
         <div className="signup-link">
           <Link to="/usersManagement">Back to users</Link>
         </div>
-        
-        <p className="mark">© 2026 SkyCast</p>
 
+        <p className="mark">© 2026 SkyCast</p>
       </div>
     </div>
   );

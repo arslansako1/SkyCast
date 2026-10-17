@@ -1,17 +1,21 @@
 import { useEffect, useRef } from "react"
 
+interface DangerAlertProps {
+    message: string;
+    onClose: () => void;
+};
 
-export default function DangerAlert({message, onClose}){
-    const dialogRef = useRef(null);
+export default function DangerAlert({message, onClose}: DangerAlertProps){
+    const dialogRef = useRef<HTMLDialogElement>(null);
 
     useEffect(() => {
         setTimeout(() => {
-        dialogRef.current.show();
+        dialogRef.current?.show();
             
         },  1000);
         
         setTimeout(() => {
-            dialogRef.current.close();
+            dialogRef.current?.close();
             onClose();
             
         },  5500);
